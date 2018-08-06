@@ -1,0 +1,5 @@
+"0"," "
+"0"," #ggp_build <- plotly_build(p)"
+"0","#ggp_build$layout$height = 500"
+"0","#ggp_build$layout$width = 2000"
+"0","#ggp_build"

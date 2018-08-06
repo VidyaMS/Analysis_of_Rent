@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1532496555179.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "298BCC8C",
+    "lastKnownWriteTime" : 1533538227,
+    "last_content_update" : 1533538341144,
+    "path" : "C:/Users/Anusha/Learning/Learn R/Webscraping/Yelahanka 3 BHK rent analysis.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "135,0",
+        "last_setup_crc32" : "3E98AF1148fcd713",
+        "scrollLine" : "129"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

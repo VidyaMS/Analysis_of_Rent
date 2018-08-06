@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1532582731996.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1233333306",
+    "id" : "E1CE51A5",
+    "lastKnownWriteTime" : 1533536836,
+    "last_content_update" : 1533536836135,
+    "path" : "C:/Users/Anusha/Learning/Learn R/MyProjs/Rent Analysis/app.R",
+    "project_path" : "app.R",
+    "properties" : {
+        "cursorPosition" : "9,101",
+        "scrollLine" : "6"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

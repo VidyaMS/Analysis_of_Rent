@@ -1,0 +1,85 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+## When no records to be displayed , how do you handle that ??
+## Create another tab and plot SBA , rent and plot the relation , predict for a given set of values . 
+
+library(shiny)
+library(tidyverse)
+
+## Read in the data .
+rent.db <- read.csv("Yelahanka rent.csv" , header = TRUE , stringsAsFactors = FALSE)
+rent.db <- rent.db %>% filter(Apt_name != "NA")
+rent.db$Availability <- as.factor(rent.db$Availability) 
+apt_furnishing <- levels(as.factor(rent.db$Furnishing))
+apt_furnishing <- c("All" , apt_furnishing)
+
+apt.name <- levels(as.factor(rent.db$Apt_name))
+apt.name <- c("All", apt.name )
+
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Rent Analysis for a 3BHK Apartment in Yelahanka, Bangalore "),
+   
+   inputPanel(
+     selectInput("furnishing", label = "Furnishing:",
+                 choices = apt_furnishing , selected = "All"),
+     
+     selectInput("apt_name", label = "Apartment Name:",
+                 choices = apt.name , selected = "All")
+   ),
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+        plotOutput("p1" , height = 500 , width = 800 )
+      )
+   )
+#)
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+   
+  output$p1 <- renderPlot({
+    
+    if( input$apt_name == "All" & input$furnishing == "All" ) {  
+      
+      required.db = rent.db }
+    
+    else {
+      
+      if(input$apt_name != "All" & input$furnishing == "All") {
+        
+        required.db <- rent.db %>% filter(Apt_name == input$apt_name)
+        
+      } 
+      
+      
+      if(input$furnishing != "All" & input$apt_name != "All"){
+        
+        required.db <- rent.db %>% filter(Apt_name ==                                                input$apt_name &  Furnishing == input$furnishing) 
+      }
+      
+      if(input$apt_name == "All" & input$furnishing != "All") {
+        
+        required.db <- rent.db %>% filter(Furnishing ==                                              input$furnishing)
+      }
+      
+    }  
+    
+    
+    ggplot(data = required.db,  aes(SBA , Rent)) + geom_bar(aes(fill = Apt_name) , stat = "identity" , width = 5) + labs( x= "SBA (sq ft )" , Y = "Rent (Rs)" ,title  = paste("Rent Analysis for Apt" , input$apt_name , sep = " :")) + facet_wrap( ~ Availability ,                              ncol = 1 )
+    
+  })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+

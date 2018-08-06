@@ -1,0 +1,4 @@
+"0","library(shiny)"
+"0","library(tidyverse)"
+"0","rent.db <- read.csv(""Yelahanka rent.csv"" , header = TRUE , stringsAsFactors = FALSE)"
+"0","rent.db <- rent.db %>% filter(Apt_name != ""NA"")"

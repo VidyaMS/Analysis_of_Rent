@@ -1,0 +1,175 @@
+---
+title: "Yelanka 3 BHK  Rent Report"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F , message = F , warning = F)
+```
+
+##  3 BHK Rent Analysis of Apartments in and around Yelahanka. This document references the advertisements published on the web  and collects information such as Apartment name , SBA of the apartment , rent amount , availability , furnishings etc. 
+
+```{r , echo = FALSE , warning= FALSE , message=FALSE }
+
+library(rvest)
+
+library(stringr)
+
+library(tidyverse)
+
+library(plotly)
+
+```
+
+```{r , echo = FALSE }
+
+## Web pages of commonfloor.com , with only 3BHK aprtments advertised for rent .
+
+url <- c("https://www.commonfloor.com/bangalore-property/purva-venezia-ladkzf-p/for-rent/apartment-ht/3-bhk","https://www.commonfloor.com/bangalore-property/purva-venezia-ladkzf-p/for-rent/apartment-ht/3-bhk?page=2")
+
+apt_name <- character()
+sq_ft <- character()
+rent_amount <- character()
+link <- character()
+availability <- character()
+
+## There are two web pages to extract rent data .
+for(i in seq_along(url)){
+  
+webpage <- read_html(url[i])
+
+project_name <-  html_text(html_nodes(webpage , "h4"))
+
+########### 4/7
+
+## store each advertisement's detail page reference .
+link <- c(link , html_attr(html_nodes(webpage , "h2 a") , "href"))
+
+###########
+
+## Clean up unwanted info.
+project_name <- str_replace_all(project_name , "More Properties" ,"")
+
+## Extract the apartment name 
+project_name <- str_sub(project_name , 11 ) %>% str_trim()
+
+project_name[project_name == ""] <- "NA"
+
+## Store apartment name 
+apt_name <- c(apt_name , project_name)
+
+html_data <-  html_nodes(webpage ,".infodata:nth-child(2) span")
+
+sq_ft  <- c(sq_ft , html_text(html_data , trim=TRUE))
+
+html_data <- html_nodes(webpage ,".infodata:nth-child(1) span")
+rent_amount  <- c(rent_amount , html_text(html_data , trim=TRUE))
+
+html_data <- html_nodes(webpage , ".infodata~ .infodata+ .infodata span")
+availability <- c(availability , html_text(html_data , trim = TRUE))
+}
+
+### Read through each of the advertisement's description page to extract more features .
+
+link <- paste("https://www.commonfloor.com" , link , sep = "")
+
+features <- character()
+furnishing <- character()
+sec_deposit <- character()
+
+    for(i in seq_along(link)){
+      
+      det_webpage <- read_html(link[i])
+      details <- html_text(html_nodes(det_webpage , "#listing-features li"))
+      features[i] <- paste0(details , collapse = "| ")
+      
+      ##
+      furnishing[i] <- str_extract(features[i] , "[:alpha:]+\\sfurnished")
+      furnishing[i] <- ifelse(is.na(furnishing[i]) , "Not specified", furnishing[i])
+      
+      ## Security Deposit 
+      
+      sec_deposit[i] <- str_extract(features[i] , "Security Deposit\\s\\d+")
+      
+      sec_deposit[i] <- ifelse(is.na(sec_deposit[i]), "0" , str_extract(sec_deposit[i] , "\\d+"))
+      
+      
+    }
+    
+
+```
+
+## Required rent information 
+
+```{r , echo = FALSE , message = FALSE}
+
+Today <- Sys.Date()
+
+```
+
+```{r , echo = FALSE , message= FALSE , fig.width=10, fig.height=5}
+
+sq_ft_edited <- stringr::str_extract(sq_ft , "\\d*\\d*\\d*\\d*\\s")
+
+
+  rent_numeric <- as.numeric(stringr::str_extract(rent_amount , "\\d*\\d*[[:punct:]]*\\d*\\d*"))
+  
+  rent_letter <- stringr::str_extract(rent_amount , "[[:alpha:]]")
+  
+  rent_conversion_db <- data.frame(rent_numeric , rent_letter)
+  
+  rent_conversion_db <- rent_conversion_db %>% mutate(whole_rent = ifelse(rent_letter == "K" , rent_numeric*1000 , ifelse(rent_letter == "L", rent_numeric*100000, 0)))
+  
+sec_deposit.n <- as.numeric(sec_deposit)
+
+
+rent.db <- data.frame("Apt_name" = apt_name , "SBA" = as.numeric(sq_ft_edited) , "Rent" = rent_conversion_db$whole_rent, "Features" = features , "Furnishing" = furnishing , "Availability" = availability , "Sec_deposit" = sec_deposit.n)
+
+title <- paste("Rent info as of" , Today , sep =" ")
+
+ p <- rent.db %>% filter(apt_name != "NA") %>% ggplot(aes(SBA, Rent)) + geom_bar(aes(fill = Apt_name , linetype = as.factor(Furnishing)) , stat = "identity",width = 40) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(title = title , x = "SBA (sq ft)" , y = "Rent (Rs)", fill = "Apt name" , linetype = "")
+
+## Plot interactive graph for display of rent for various apartments . 
+
+ 
+ ggplotly(p)
+
+```
+
+## Rent information  of  only Purva Venezia apartments.
+```{r , fig.width= 10}
+
+rent.db$Availability <- as.factor(rent.db$Availability)
+
+rent.db %>% filter(Apt_name == "Purva Venezia") %>% ggplot(aes(SBA,Rent)) + geom_bar(stat = "identity" , aes(fill = Furnishing)) + theme(axis.text.x = element_text(angle = 45, hjust =1)) + xlab("SBA (sq ft)") + ylab("Rent (Rs)") + facet_wrap(~ Availability)
+
+```
+
+### Can we see a  trend in the rent for Purva Venezia .  
+```{r}
+rent.db %>% filter(Apt_name == "Purva Venezia") %>% ggplot(aes(SBA,Rent)) + geom_point(color = "red", size = 3) +  labs(x = "SBA (sq ft)", y ="Rent (Rs)" , title = "Rent Vs Sq ft") + geom_smooth(method = "lm" , se = FALSE)
+
+```
+
+### How well can  we predict the rent of a 3BHK apartment at Yelahanka ?
+```{r}
+
+rent.mod1 <- lm(Rent ~ SBA + Furnishing + Apt_name, data = rent.db)
+
+#summary(rent.mod1)
+
+#plot(rent.mod1)
+
+predicted.rent <- predict(rent.mod1)
+
+rent.db.predicted <- cbind(rent.db , "predicted_rent"= predicted.rent)
+
+ggplot(aes(SBA, Rent ), data = rent.db.predicted) + geom_point(aes(color = "Actual_Rent"), size = 3) + geom_point(aes(SBA, predicted_rent, color = "Predicted_Rent"), size = 2) + labs(title ="Actual Rent and Predicted Rent " ) + scale_color_manual(name = "Color", values = c(Actual_Rent = "Red", Predicted_Rent = "Green"))
+
+```
+
+```{r , echo = FALSE}
+
+write.csv(rent.db , file = "Yelahanka rent.csv", row.names = FALSE)
+
+```

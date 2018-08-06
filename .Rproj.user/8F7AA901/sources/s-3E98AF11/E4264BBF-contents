@@ -1,0 +1,90 @@
+---
+title: "Yelahanka Rent Analysis"
+author: "Vidya"
+
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE , warning = FALSE , message = F)
+```
+
+### Rent Analysis for a 3BHK apartment at Yelahanka . 
+
+```{r , echo = FALSE}
+
+library(shiny)
+library(tidyverse)
+
+rent.db <- read.csv("Yelahanka rent.csv" , header = TRUE , stringsAsFactors = FALSE)
+rent.db <- rent.db %>% filter(Apt_name != "NA")
+rent.db$Availability <- as.factor(rent.db$Availability) 
+```
+
+
+```{r , echo=FALSE , fig.height= 20}
+
+apt_furnishing <- levels(as.factor(rent.db$Furnishing))
+apt_furnishing <- c("All" , apt_furnishing)
+
+apt.name <- levels(as.factor(rent.db$Apt_name))
+apt.name <- c("All", apt.name )
+
+shinyApp(
+
+        ui = fluidPage(
+
+                      inputPanel(
+                              selectInput("furnishing", label = "Furnishing:",
+                              choices = apt_furnishing , selected = "All"),
+  
+                              selectInput("apt_name", label = "Apartment Name:",
+                               choices = apt.name , selected = "All")
+                                ),
+
+                      plotOutput("p1" , height = 500 , width = 800 )
+
+                      ), # end of ui
+
+              server = function(input , output){
+
+                            output$p1 <- renderPlot({
+  
+                            if( input$apt_name == "All" & input$furnishing == "All" ) {  
+                            
+                              required.db = rent.db }
+                             
+                            else {
+                              
+                                if(input$apt_name != "All" & input$furnishing == "All") {
+                                
+                                required.db <- rent.db %>% filter(Apt_name == input$apt_name)
+                                
+                                } 
+                              
+                              
+                                if(input$furnishing != "All" & input$apt_name != "All"){
+                                
+                                  required.db <- rent.db %>% filter(Apt_name ==                                                input$apt_name &  Furnishing == input$furnishing) 
+                                }
+                              
+                                if(input$apt_name == "All" & input$furnishing != "All") {
+                                
+                                  required.db <- rent.db %>% filter(Furnishing ==                                              input$furnishing)
+                                }
+                              
+                             }  
+                            
+                              
+                            ggplot(data = required.db,  aes(SBA , Rent)) + geom_bar(aes(fill                             = Apt_name) , stat = "identity" , width = 5) + labs( x= "SBA (sq                             ft )" , Y = "Rent (Rs)" ,title  = paste("Rent Analysis for Apt" ,                                input$apt_name , sep = " :")) + facet_wrap( ~ Availability ,                              ncol = 1 )
+  
+                                                    }) 
+
+                             }
+
+) ## end of shinyapp
+```
+
+
+

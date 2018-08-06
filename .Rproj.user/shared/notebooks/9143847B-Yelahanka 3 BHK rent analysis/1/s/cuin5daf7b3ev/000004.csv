@@ -1,0 +1,2 @@
+"0","## DOES NOT PLOT THE GEOM_SMOOTH ????"
+"0","rent.db %>% filter(Apt_name == ""Purva Venezia"") %>% ggplot(aes(SBA,Rent)) + geom_point(color = ""blue"") +  labs(x = ""SBA (sq ft)"", y =""Rent (Rs)"" , title = ""Rent Vs Sq ft"") + geom_smooth(method = ""lm"" , se = FALSE)"
